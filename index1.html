@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>버스 탑승 확인</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background:#f0f4f1; min-height:100vh; }
+
+  .header { background:linear-gradient(135deg,#1a4a8c,#2d6fd4); color:#fff; padding:16px; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+  .header h1 { font-size:18px; font-weight:800; }
+  .header-sub { font-size:12px; opacity:0.75; margin-top:2px; }
+
+  .top-bar { background:#fff; padding:10px 16px; display:flex; gap:8px; border-bottom:1px solid #dde6f0; }
+  .bulk-btn { flex:1; padding:9px; border-radius:8px; border:none; font-size:13px; font-weight:700; cursor:pointer; }
+  .bulk-btn.all { background:#1a4a8c; color:#fff; }
+  .bulk-btn.none { background:#e8eef8; color:#1a4a8c; border:2px solid #c0cfe8; }
+
+  .search-bar { padding:10px 16px; background:#fff; border-bottom:1px solid #dde6f0; }
+  .search-input { width:100%; padding:8px 12px; border:2px solid #c0cfe8; border-radius:10px; font-size:14px; color:#1a2a3f; }
+  .search-input:focus { outline:none; border-color:#2d6fd4; }
+
+  .bus-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 16px; padding-bottom:80px; }
+
+  .bus-card { background:#fff; border-radius:12px; padding:11px 12px; display:flex; align-items:center; gap:8px; box-shadow:0 1px 4px rgba(0,0,0,0.07); border:2px solid transparent; cursor:pointer; transition:all .15s; }
+  .bus-card.boarded { border-color:#2d6fd4; background:#eef3fc; }
+  .bus-num { font-size:11px; color:#bbb; font-weight:600; width:18px; flex-shrink:0; }
+  .bus-name { font-size:15px; font-weight:700; color:#1a2a3f; flex:1; }
+  .bus-card.boarded .bus-name { color:#1a4a8c; }
+  .bus-icon { width:32px; height:32px; border-radius:50%; border:2px solid #c0cfe8; background:#f0f4fa; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
+  .bus-card.boarded .bus-icon { background:#1a4a8c; border-color:#1a4a8c; }
+
+  .stats-bar { position:fixed; bottom:0; left:0; right:0; background:#0f2a5c; color:#fff; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 -2px 12px rgba(0,0,0,0.25); z-index:50; }
+  .stats-left { display:flex; flex-direction:column; }
+  .stats-label { font-size:12px; opacity:0.65; }
+  .stats-num { font-size:24px; font-weight:900; color:#a8c8f8; line-height:1.1; }
+  .stats-total { font-size:12px; opacity:0.5; }
+  .export-btn { background:#2d6fd4; color:#fff; border:none; padding:9px 18px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; }
+
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:flex-end; }
+  .modal-bg.show { display:flex; }
+  .modal { background:#fff; width:100%; border-radius:20px 20px 0 0; padding:24px 20px 40px; }
+  .modal h2 { font-size:16px; font-weight:800; color:#1a2a3f; margin-bottom:16px; }
+  .modal-close { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:#888; }
+  .export-text { background:#f4f7fc; border:1px solid #c0cfe8; border-radius:10px; padding:12px; font-size:12px; color:#1a2a3f; white-space:pre-wrap; max-height:320px; overflow-y:auto; line-height:1.7; }
+  .copy-btn { width:100%; margin-top:12px; padding:14px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🚌 버스 탑승 확인</h1>
+  <div class="header-sub">지구촌교회 · 33명</div>
+</div>
+
+<div class="top-bar">
+  <button class="bulk-btn all" onclick="markAll(true)">전체 탑승</button>
+  <button class="bulk-btn none" onclick="markAll(false)">전체 취소</button>
+</div>
+
+<div class="search-bar">
+  <input type="text" class="search-input" id="searchInput" placeholder="🔍 이름 검색...">
+</div>
+
+<div class="bus-grid" id="busList"></div>
+
+<div class="stats-bar">
+  <div class="stats-left">
+    <div class="stats-label">탑승 인원</div>
+    <div>
+      <span class="stats-num" id="boardCount">0</span>
+      <span class="stats-total"> / 33명</span>
+    </div>
+  </div>
+  <button class="export-btn" onclick="showExport()">📋 명단 내보내기</button>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="hideExport(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="hideExport()">✕</button>
+    <h2>🚌 버스 탑승 명단</h2>
+    <div class="export-text" id="exportText"></div>
+    <button class="copy-btn" onclick="copyText()">클립보드에 복사</button>
+  </div>
+</div>
+
+<script>
+const names = [
+  "김순자","구울영","김혜연","김은희","이화숙","김윤희","남미정","임도아",
+  "송지연","백재영","심의라","김진원","이준택","김도건","김혜세","안태성","신준식",
+  "오앵숙","전보장","홍은숙","장은숙","이희정","김태연","임순정",
+  "홍성희","오진영","정수만","서대인","황준규","김영원","정성현","허성준","이재림"
+];
+
+let busData = {};
+
+function init() {
+  const saved = localStorage.getItem('busOnly');
+  if (saved) busData = JSON.parse(saved);
+  names.forEach(n => { if (busData[n] === undefined) busData[n] = false; });
+}
+
+function save() {
+  localStorage.setItem('busOnly', JSON.stringify(busData));
+}
+
+function render() {
+  const query = document.getElementById('searchInput').value.trim();
+  const container = document.getElementById('busList');
+  container.innerHTML = '';
+  const filtered = names.filter(n => !query || n.includes(query));
+  filtered.forEach(name => {
+    const b = !!busData[name];
+    const card = document.createElement('div');
+    card.className = 'bus-card' + (b ? ' boarded' : '');
+    card.onclick = () => toggle(name);
+    card.innerHTML = `
+      <div class="bus-num">${names.indexOf(name)+1}</div>
+      <div class="bus-name">${name}</div>
+      <div class="bus-icon">${b ? '🚌' : ''}</div>`;
+    container.appendChild(card);
+  });
+  const count = names.filter(n => busData[n]).length;
+  document.getElementById('boardCount').textContent = count;
+}
+
+function toggle(name) {
+  busData[name] = !busData[name];
+  save(); render();
+}
+
+function markAll(val) {
+  names.forEach(n => busData[n] = val);
+  save(); render();
+}
+
+function showExport() {
+  const boarded = names.filter(n => busData[n]);
+  const not = names.filter(n => !busData[n]);
+  let text = `🚌 버스 탑승 명단\n${'='.repeat(28)}\n`;
+  text += `\n탑승 ${boarded.length}명 / 미탑승 ${not.length}명\n`;
+  text += `\n[탑승 완료 ${boarded.length}명]\n`;
+  boarded.forEach((n,i) => text += `${i+1}. ${n}\n`);
+  text += `\n[미탑승 ${not.length}명]\n`;
+  not.forEach((n,i) => text += `${i+1}. ${n}\n`);
+  document.getElementById('exportText').textContent = text;
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function hideExport(e) {
+  if (!e || e.target === document.getElementById('modalBg'))
+    document.getElementById('modalBg').classList.remove('show');
+}
+
+function copyText() {
+  navigator.clipboard.writeText(document.getElementById('exportText').textContent).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ 복사됨!';
+    setTimeout(() => btn.textContent = '클립보드에 복사', 1500);
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', render);
+
+init(); render();
+</script>
+</body>
+</html>
