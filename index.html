@@ -3,109 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>버스 탑승 확인</title>
+<title>셔틀버스 탑승 확인</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background:#f0f4f1; min-height:100vh; }
+/* ── 기본 ── */
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#f0f4f1; min-height:100vh; }
 
-  .header { background:linear-gradient(135deg,#1a4a8c,#2d6fd4); color:#fff; padding:16px; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
-  .header h1 { font-size:18px; font-weight:800; }
-  .header-sub { font-size:12px; opacity:0.75; margin-top:2px; }
+/* ── 헤더 / 탭 ── */
+.header { background:linear-gradient(135deg,#1a4a8c,#2d6fd4); color:#fff; padding:16px; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+.header h1 { font-size:18px; font-weight:800; }
+.header-sub { font-size:12px; opacity:.75; margin-top:2px; }
+.main-tabs { display:flex; background:#fff; border-bottom:2px solid #dde6f0; position:sticky; top:56px; z-index:90; }
+.main-tab { flex:1; padding:12px; text-align:center; font-size:14px; font-weight:700; color:#aaa; cursor:pointer; border-bottom:3px solid transparent; transition:all .15s; }
+.main-tab.active { color:#1a4a8c; border-bottom-color:#1a4a8c; }
+.page { display:none; }
+.page.active { display:block; }
 
-  .main-tabs { display:flex; background:#fff; border-bottom:2px solid #dde6f0; position:sticky; top:56px; z-index:90; }
-  .main-tab { flex:1; padding:12px; text-align:center; font-size:14px; font-weight:700; color:#aaa; cursor:pointer; border-bottom:3px solid transparent; transition:all .15s; }
-  .main-tab.active { color:#1a4a8c; border-bottom-color:#1a4a8c; }
+/* ── 탑승 체크 탭 ── */
+.guide-box { background:#fff8e1; border-left:4px solid #f9a825; padding:12px 16px; font-size:13px; color:#5d4037; line-height:1.5; }
+.guide-box strong { font-weight:800; }
+.admin-bar { background:#fff; padding:10px 16px; display:flex; gap:8px; border-bottom:1px solid #dde6f0; }
+.admin-btn { flex:1; padding:8px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:none; }
+.admin-btn.refresh { background:#e8f5e9; color:#27ae60; border:2px solid #b2dfdb; }
+.admin-btn.reset   { background:#fff0f0; color:#c0392b; border:2px solid #f5c0c0; }
+.bus-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 16px; padding-bottom:100px; }
+.bus-card { background:#fff; border-radius:12px; padding:14px 12px; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(0,0,0,.08); border:2px solid transparent; cursor:pointer; transition:all .15s; }
+.bus-card.selected { border-color:#2d6fd4; background:#ddeeff; transform:scale(1.03); }
+.bus-card.boarded  { border-color:#27ae60; background:#eafaf1; cursor:default; }
+.bus-num   { font-size:11px; color:#bbb; font-weight:600; margin-right:6px; flex-shrink:0; }
+.bus-name  { font-size:15px; font-weight:700; color:#1a2a3f; }
+.bus-card.selected .bus-name { color:#1a4a8c; }
+.bus-card.boarded  .bus-name { color:#27ae60; }
+.bus-check { margin-left:6px; font-size:14px; }
+.submit-bar { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #dde6f0; padding:12px 16px; z-index:50; box-shadow:0 -2px 12px rgba(0,0,0,.1); }
+.selected-name { font-size:13px; color:#666; margin-bottom:8px; min-height:18px; text-align:center; }
+.selected-name span { font-weight:800; color:#1a4a8c; }
+.submit-btn { width:100%; padding:14px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:800; cursor:pointer; transition:all .15s; }
+.submit-btn:disabled { background:#ccc; cursor:not-allowed; }
 
-  .page { display:none; }
-  .page.active { display:block; }
+/* ── 확인 탭 ── */
+.confirm-page { padding:14px 16px; padding-bottom:80px; }
+.summary-box { background:linear-gradient(135deg,#1a4a8c,#2d6fd4); border-radius:14px; padding:16px; color:#fff; margin-bottom:14px; }
+.summary-title { font-size:13px; opacity:.75; margin-bottom:8px; }
+.summary-row { display:flex; justify-content:space-around; }
+.summary-item { text-align:center; }
+.summary-num { font-size:28px; font-weight:900; color:#a8c8f8; line-height:1; }
+.summary-label { font-size:11px; opacity:.7; margin-top:3px; }
+.section-title { font-size:13px; font-weight:700; color:#1a4a8c; margin-bottom:8px; padding-left:2px; }
+.not-boarded-list { display:flex; flex-direction:column; gap:6px; }
+.nb-card { background:#fff; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 4px rgba(0,0,0,.07); border-left:4px solid #e05555; }
+.ok-card { background:#fff; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 4px rgba(0,0,0,.07); border-left:4px solid #27ae60; }
+.nb-num  { font-size:12px; color:#bbb; font-weight:600; width:20px; flex-shrink:0; }
+.nb-info { flex:1; }
+.nb-name { font-size:15px; font-weight:700; color:#1a2a3f; }
+.nb-phone{ font-size:13px; color:#666; margin-top:2px; }
+.nb-call { width:36px; height:36px; border-radius:50%; background:#e8f0fe; border:none; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; }
+.empty-msg { text-align:center; padding:40px 20px; color:#aaa; font-size:14px; }
+.stats-bar { position:fixed; bottom:0; left:0; right:0; background:#0f2a5c; color:#fff; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 -2px 12px rgba(0,0,0,.25); z-index:50; }
+.stats-num { font-size:24px; font-weight:900; color:#a8c8f8; }
+.stats-label { font-size:12px; opacity:.65; }
+.export-btn { background:#2d6fd4; color:#fff; border:none; padding:9px 18px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; }
 
-  /* 탑승 체크 페이지 */
-  .guide-box { background:#fff8e1; border-left:4px solid #f9a825; padding:12px 16px; font-size:13px; color:#5d4037; line-height:1.5; }
-  .guide-box strong { font-weight:800; }
+/* ── 자차이용 섹션 ── */
+.exempt-section { background:#fff8e1; border-radius:12px; padding:12px 14px; margin-bottom:14px; border-left:4px solid #f9a825; }
+.exempt-title { font-size:13px; font-weight:700; color:#e65100; margin-bottom:8px; }
+.exempt-search { display:flex; gap:8px; margin-bottom:8px; }
+.search-wrap { position:relative; flex:1; }
+.exempt-input { width:100%; padding:9px 12px; border:2px solid #ffe082; border-radius:10px; font-size:14px; outline:none; background:#fffde7; }
+.exempt-input:focus { border-color:#f9a825; }
+.exempt-add-btn { padding:9px 14px; background:#f9a825; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.search-result { position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ffe082; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.12); z-index:200; max-height:200px; overflow-y:auto; display:none; }
+.search-item { padding:10px 14px; font-size:14px; cursor:pointer; border-bottom:1px solid #f5f5f5; }
+.search-item:last-child { border-bottom:none; }
+.search-item:hover { background:#fff8e1; }
+.search-item-name  { font-weight:700; color:#1a2a3f; }
+.search-item-phone { font-size:12px; color:#888; margin-top:1px; }
+.exempt-tags { display:flex; flex-wrap:wrap; gap:6px; min-height:10px; }
+.exempt-tag { display:flex; align-items:center; gap:4px; background:#fff3e0; border:1px solid #ffcc80; border-radius:20px; padding:4px 10px; font-size:13px; font-weight:600; color:#e65100; }
+.exempt-tag-del { background:none; border:none; color:#aaa; font-size:14px; cursor:pointer; padding:0 2px; line-height:1; }
 
-  .bus-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 16px; padding-bottom:100px; }
-  .bus-card { background:#fff; border-radius:12px; padding:14px 12px; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(0,0,0,0.08); border:2px solid transparent; cursor:pointer; transition:all .15s; }
-  .bus-card.selected { border-color:#2d6fd4; background:#ddeeff; transform:scale(1.03); }
-  .bus-card.boarded { border-color:#27ae60; background:#eafaf1; cursor:default; }
-  .bus-num { font-size:11px; color:#bbb; font-weight:600; margin-right:6px; flex-shrink:0; }
-  .bus-name { font-size:15px; font-weight:700; color:#1a2a3f; }
-  .bus-card.selected .bus-name { color:#1a4a8c; }
-  .bus-card.boarded .bus-name { color:#27ae60; }
-  .bus-check { margin-left:6px; font-size:14px; }
+/* ── 다이얼로그 공통 ── */
+.dialog-bg, .confirm-dialog { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300; align-items:center; justify-content:center; }
+.dialog-bg.show, .confirm-dialog.show { display:flex; }
 
-  /* 하단 제출 바 */
-  .submit-bar { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #dde6f0; padding:12px 16px; z-index:50; box-shadow:0 -2px 12px rgba(0,0,0,0.1); }
-  .selected-name { font-size:13px; color:#666; margin-bottom:8px; min-height:18px; text-align:center; }
-  .selected-name span { font-weight:800; color:#1a4a8c; }
-  .submit-btn { width:100%; padding:14px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:800; cursor:pointer; transition:all .15s; }
-  .submit-btn:disabled { background:#ccc; cursor:not-allowed; }
-  .submit-btn.active { background:#1a4a8c; }
+/* ── 탑승 완료 다이얼로그 ── */
+.dialog-box { background:#fff; border-radius:20px; padding:28px 24px; width:82%; max-width:320px; text-align:center; }
+.dialog-icon  { font-size:48px; margin-bottom:12px; }
+.dialog-title { font-size:18px; font-weight:900; color:#1a2a3f; margin-bottom:6px; }
+.dialog-msg   { font-size:14px; color:#666; margin-bottom:20px; line-height:1.5; }
+.dialog-ok    { width:100%; padding:13px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; }
 
-  /* 확인 페이지 */
-  .confirm-page { padding:14px 16px; padding-bottom:80px; }
-  .summary-box { background:linear-gradient(135deg,#1a4a8c,#2d6fd4); border-radius:14px; padding:16px; color:#fff; margin-bottom:14px; }
-  .summary-title { font-size:13px; opacity:0.75; margin-bottom:8px; }
-  .summary-row { display:flex; justify-content:space-around; }
-  .summary-item { text-align:center; }
-  .summary-num { font-size:28px; font-weight:900; color:#a8c8f8; line-height:1; }
-  .summary-label { font-size:11px; opacity:0.7; margin-top:3px; }
+/* ── 스태프 인증 다이얼로그 ── */
+.cd-box   { background:#fff; border-radius:16px; padding:24px 20px; width:88%; max-width:340px; text-align:center; }
+.cd-title { font-size:16px; font-weight:800; color:#1a2a3f; margin-bottom:8px; }
+.cd-msg   { font-size:13px; color:#666; margin-bottom:20px; line-height:1.5; }
+.cd-btns  { display:flex; gap:10px; }
+.cd-btn   { flex:1; padding:12px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; }
+.cd-btn.cancel { background:#f0f4fa; color:#666; }
+.cd-btn.ok     { background:#c0392b; color:#fff; }
+.pin-input { width:100%; padding:12px; border:2px solid #dde6f0; border-radius:10px; font-size:22px; text-align:center; letter-spacing:8px; outline:none; margin-bottom:8px; }
+.pin-error { font-size:12px; color:#c0392b; min-height:16px; margin-bottom:10px; }
+.staff-btn { width:100%; padding:11px; border-radius:10px; border:2px solid #dde6f0; background:#f4f7fc; font-size:15px; font-weight:700; color:#1a2a3f; cursor:pointer; margin-bottom:8px; }
 
-  .section-title { font-size:13px; font-weight:700; color:#1a4a8c; margin-bottom:8px; padding-left:2px; }
-  .not-boarded-list { display:flex; flex-direction:column; gap:6px; }
-  .nb-card { background:#fff; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 4px rgba(0,0,0,0.07); border-left:4px solid #e05555; }
-  .ok-card { background:#fff; border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 4px rgba(0,0,0,0.07); border-left:4px solid #27ae60; }
-  .nb-num { font-size:12px; color:#bbb; font-weight:600; width:20px; flex-shrink:0; }
-  .nb-info { flex:1; }
-  .nb-name { font-size:15px; font-weight:700; color:#1a2a3f; }
-  .nb-phone { font-size:13px; color:#666; margin-top:2px; }
-  .nb-call { width:36px; height:36px; border-radius:50%; background:#e8f0fe; border:none; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; }
-  .empty-msg { text-align:center; padding:40px 20px; color:#aaa; font-size:14px; }
-
-  /* 관리자 버튼 */
-  .admin-bar { background:#fff; padding:10px 16px; display:flex; gap:8px; border-bottom:1px solid #dde6f0; }
-  .admin-btn { flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; font-weight:700; cursor:pointer; }
-  .admin-btn.reset { background:#fff0f0; color:#c0392b; border:2px solid #f5c0c0; }
-  .admin-btn.all { background:#e8eef8; color:#1a4a8c; border:2px solid #c0cfe8; }
-
-  /* 완료 다이얼로그 */
-  .dialog-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:300; align-items:center; justify-content:center; }
-  .dialog-bg.show { display:flex; }
-  .dialog-box { background:#fff; border-radius:20px; padding:28px 24px; width:82%; max-width:320px; text-align:center; }
-  .dialog-icon { font-size:48px; margin-bottom:12px; }
-  .dialog-title { font-size:18px; font-weight:900; color:#1a2a3f; margin-bottom:6px; }
-  .dialog-msg { font-size:14px; color:#666; margin-bottom:20px; line-height:1.5; }
-  .dialog-ok { width:100%; padding:13px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; }
-
-  /* 초기화 확인 */
-  .confirm-dialog { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:300; align-items:center; justify-content:center; }
-  .confirm-dialog.show { display:flex; }
-  .cd-box { background:#fff; border-radius:16px; padding:24px 20px; width:80%; max-width:300px; text-align:center; }
-  .cd-title { font-size:16px; font-weight:800; color:#1a2a3f; margin-bottom:8px; }
-  .cd-msg { font-size:13px; color:#666; margin-bottom:20px; line-height:1.5; }
-  .cd-btns { display:flex; gap:10px; }
-  .cd-btn { flex:1; padding:12px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; }
-  .cd-btn.cancel { background:#f0f4fa; color:#666; }
-  .cd-btn.ok { background:#c0392b; color:#fff; }
-
-  /* 통계 바 (확인탭) */
-  .stats-bar { position:fixed; bottom:0; left:0; right:0; background:#0f2a5c; color:#fff; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 -2px 12px rgba(0,0,0,0.25); z-index:50; }
-  .stats-num { font-size:24px; font-weight:900; color:#a8c8f8; }
-  .stats-label { font-size:12px; opacity:0.65; }
-  .export-btn { background:#2d6fd4; color:#fff; border:none; padding:9px 18px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; }
-
-  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:flex-end; }
-  .modal-bg.show { display:flex; }
-  .modal { background:#fff; width:100%; border-radius:20px 20px 0 0; padding:24px 20px 40px; }
-  .modal h2 { font-size:16px; font-weight:800; color:#1a2a3f; margin-bottom:16px; }
-  .modal-close { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:#888; }
-  .export-text { background:#f4f7fc; border:1px solid #c0cfe8; border-radius:10px; padding:12px; font-size:12px; color:#1a2a3f; white-space:pre-wrap; max-height:320px; overflow-y:auto; line-height:1.7; }
-  .copy-btn { width:100%; margin-top:12px; padding:14px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; }
+/* ── 내보내기 모달 ── */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:flex-end; }
+.modal-bg.show { display:flex; }
+.modal { background:#fff; width:100%; border-radius:20px 20px 0 0; padding:24px 20px 40px; }
+.modal h2 { font-size:16px; font-weight:800; color:#1a2a3f; margin-bottom:16px; }
+.modal-close { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:#888; }
+.export-text { background:#f4f7fc; border:1px solid #c0cfe8; border-radius:10px; padding:12px; font-size:12px; color:#1a2a3f; white-space:pre-wrap; max-height:320px; overflow-y:auto; line-height:1.7; }
+.copy-btn { width:100%; margin-top:12px; padding:14px; background:#1a4a8c; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🚌 버스 탑승 확인</h1>
+  <h1>🚌 셔틀버스 탑승 확인</h1>
   <div class="header-sub">지구촌교회 · 33명</div>
 </div>
 
@@ -114,26 +127,27 @@
   <div class="main-tab" onclick="switchPage('confirm')">📋 확인</div>
 </div>
 
-<!-- 탑승 체크 페이지 -->
+<!-- ── 탑승 체크 탭 ── -->
 <div class="page active" id="page-check">
   <div class="guide-box">
     📌 <strong>본인 이름을 선택</strong>한 후 아래 <strong>제출하기</strong> 버튼을 눌러주세요
   </div>
   <div class="admin-bar">
-    <button class="admin-btn all" onclick="loadFromServer()" style="background:#e8f5e9;color:#27ae60;border-color:#b2dfdb;">🔃 새로고침</button>
-    <button class="admin-btn reset" onclick="showReset()">🔄 전체 초기화</button>
+    <button class="admin-btn refresh" onclick="loadFromServer()">🔃 새로고침</button>
   </div>
   <div class="bus-grid" id="busList"></div>
-
   <div class="submit-bar">
     <div class="selected-name" id="selectedLabel">이름을 선택해주세요</div>
     <button class="submit-btn" id="submitBtn" disabled onclick="submitBoard()">제출하기</button>
   </div>
 </div>
 
-<!-- 확인 페이지 -->
+<!-- ── 확인 탭 ── -->
 <div class="page" id="page-confirm">
   <div class="confirm-page">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <button class="admin-btn reset" style="flex:none;padding:8px 18px;" onclick="showAuthDialog(false)">🔄 전체 초기화</button>
+    </div>
     <div class="summary-box">
       <div class="summary-title">🚌 탑승 현황 요약</div>
       <div class="summary-row">
@@ -151,6 +165,22 @@
         </div>
       </div>
     </div>
+
+    <!-- 자차이용 섹션 -->
+    <div class="exempt-section">
+      <div class="exempt-title">🚗 자차이용자 등록 (탑승 명단에서 제외)</div>
+      <div class="exempt-search">
+        <div class="search-wrap">
+          <input class="exempt-input" id="exemptInput" type="text"
+            placeholder="이름 또는 전화번호 검색"
+            oninput="searchExempt(this.value)" autocomplete="off">
+          <div class="search-result" id="searchResult"></div>
+        </div>
+        <button class="exempt-add-btn" onclick="addExemptManual()">추가</button>
+      </div>
+      <div class="exempt-tags" id="exemptTags"></div>
+    </div>
+
     <div class="section-title" id="boardedTitle">✅ 탑승자 (0명)</div>
     <div class="not-boarded-list" id="boardedList" style="margin-bottom:14px"></div>
     <div class="section-title" id="notBoardedTitle">⚠️ 미탑승자 (33명)</div>
@@ -159,13 +189,13 @@
   <div class="stats-bar">
     <div>
       <div class="stats-label">탑승 인원</div>
-      <div><span class="stats-num" id="boardCount">0</span><span style="font-size:12px;opacity:0.5"> / 33명</span></div>
+      <div><span class="stats-num" id="boardCount">0</span><span id="statsTotal" style="font-size:12px;opacity:.5"> / 33명</span></div>
     </div>
     <button class="export-btn" onclick="showExport()">📋 내보내기</button>
   </div>
 </div>
 
-<!-- 제출 완료 다이얼로그 -->
+<!-- ── 탑승 완료 다이얼로그 ── -->
 <div class="dialog-bg" id="doneDialog">
   <div class="dialog-box">
     <div class="dialog-icon">🚌</div>
@@ -175,33 +205,31 @@
   </div>
 </div>
 
-<!-- 스태프 인증 초기화 다이얼로그 -->
-<div class="confirm-dialog" id="resetDialog">
-  <div class="cd-box" style="width:88%;max-width:340px;">
-    <div class="cd-title">🔐 스태프 인증</div>
-    <div class="cd-msg" style="margin-bottom:14px;">초기화 권한이 있는 스태프만<br>가능합니다</div>
+<!-- ── 스태프 인증 다이얼로그 ── -->
+<div class="confirm-dialog" id="authDialog">
+  <div class="cd-box">
+    <div class="cd-title" id="authTitle">🔐 스태프 인증</div>
+    <div class="cd-msg" id="authMsg">초기화 권한이 있는 스태프만 가능합니다</div>
 
     <!-- Step 1: 이름 선택 -->
     <div id="authStep1">
       <div style="font-size:12px;color:#888;margin-bottom:8px;text-align:left;font-weight:600;">스태프 이름 선택</div>
-      <div id="staffButtons" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
-      <div class="cd-btns">
-        <button class="cd-btn cancel" onclick="hideReset()">취소</button>
+      <div id="staffButtons"></div>
+      <div class="cd-btns" style="margin-top:4px;">
+        <button class="cd-btn cancel" onclick="hideAuthDialog()">취소</button>
       </div>
     </div>
 
-    <!-- Step 2: 뒤 4자리 입력 -->
+    <!-- Step 2: PIN 입력 -->
     <div id="authStep2" style="display:none;">
-      <div style="font-size:13px;color:#1a2a3f;font-weight:700;margin-bottom:4px;" id="selectedStaffName"></div>
+      <div style="font-size:13px;font-weight:700;color:#1a2a3f;margin-bottom:4px;" id="selectedStaffName"></div>
       <div style="font-size:12px;color:#888;margin-bottom:10px;text-align:left;">전화번호 뒤 4자리를 입력하세요</div>
-      <input type="tel" id="pinInput" maxlength="4" inputmode="numeric"
-        placeholder="0000"
-        style="width:100%;padding:12px;border:2px solid #dde6f0;border-radius:10px;font-size:22px;text-align:center;letter-spacing:8px;outline:none;margin-bottom:8px;"
+      <input class="pin-input" id="pinInput" type="tel" maxlength="4" inputmode="numeric" placeholder="0000"
         oninput="this.value=this.value.replace(/\D/g,'')"
-        onkeyup="if(this.value.length===4)verifyPin()">
-      <div id="pinError" style="font-size:12px;color:#c0392b;min-height:16px;margin-bottom:10px;"></div>
+        onkeyup="if(this.value.length===4) verifyPin()">
+      <div class="pin-error" id="pinError"></div>
       <div class="cd-btns">
-        <button class="cd-btn cancel" onclick="goStep1()">← 뒤로</button>
+        <button class="cd-btn cancel" onclick="goAuthStep(1)">← 뒤로</button>
         <button class="cd-btn ok" onclick="verifyPin()">확인</button>
       </div>
     </div>
@@ -209,16 +237,16 @@
     <!-- Step 3: 최종 확인 -->
     <div id="authStep3" style="display:none;">
       <div style="font-size:13px;color:#27ae60;font-weight:700;margin-bottom:6px;">✅ 인증 완료</div>
-      <div style="font-size:13px;color:#666;margin-bottom:18px;line-height:1.5;">모든 탑승 데이터를<br>초기화할까요?</div>
+      <div class="cd-msg" id="authStep3Msg"></div>
       <div class="cd-btns">
-        <button class="cd-btn cancel" onclick="hideReset()">취소</button>
-        <button class="cd-btn ok" onclick="doReset()">초기화</button>
+        <button class="cd-btn cancel" onclick="hideAuthDialog()">취소</button>
+        <button class="cd-btn ok" id="authOkBtn" onclick="handleAuthOk()">확인</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 내보내기 모달 -->
+<!-- ── 내보내기 모달 ── -->
 <div class="modal-bg" id="modalBg" onclick="hideExport(event)">
   <div class="modal">
     <button class="modal-close" onclick="hideExport()">✕</button>
@@ -229,6 +257,7 @@
 </div>
 
 <script>
+// ── 탑승자 명단 ──
 const people = [
   {name:"김순자", phone:"010-5461-2832"},
   {name:"구울영", phone:"010-4741-4047"},
@@ -265,26 +294,35 @@ const people = [
   {name:"이재림", phone:"010-2850-2569"}
 ];
 
-// =============================================
-// ★ GAS 배포 URL을 여기에 입력하세요
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWPmQ9ViOoVcwrDG7Xc4w0j4V9sqskVYFTO_JqFKJG-7a6xk1C0b1zIS-oWNWhrj6uHw/exec';
-// =============================================
+// ── 스태프 목록 ──
+const staffList = [
+  {name:"여상직", title:"집사", pin:"1771"},
+  {name:"전태룡", title:"집사", pin:"7463"},
+  {name:"이상진", title:"집사", pin:"1440"},
+  {name:"윤성원", title:"집사", pin:"8050"},
+  {name:"김찬영", title:"전도사", pin:"5654"}
+];
 
+// ── GAS URL ──
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWPmQ9ViOoVcwrDG7Xc4w0j4V9sqskVYFTO_JqFKJG-7a6xk1C0b1zIS-oWNWhrj6uHw/exec';
+
+// ── 상태 변수 ──
 let busData = {};
 let selectedName = null;
 let currentPage = 'check';
-let polling = null;
+let exemptSet = new Set();
+let confirmTabAuthed = false;
 
-// GAS에서 전체 데이터 로드
+// ════════════════════════════════════════
+//  서버 연동
+// ════════════════════════════════════════
 async function loadFromServer() {
   try {
-    const res = await fetch(GAS_URL + '?action=getAll');
+    const res  = await fetch(GAS_URL + '?action=getAll');
     const json = await res.json();
     if (json.ok) {
-      busData = {};
       people.forEach(p => busData[p.name] = !!json.data[p.name]);
-      if (currentPage === 'check') renderCheck();
-      else renderConfirm();
+      currentPage === 'check' ? renderCheck() : renderConfirm();
     }
   } catch(e) { console.warn('서버 로드 실패', e); }
 }
@@ -292,17 +330,17 @@ async function loadFromServer() {
 function init() {
   people.forEach(p => busData[p.name] = false);
   loadFromServer();
-  // 10초마다 자동 갱신
-  polling = setInterval(loadFromServer, 10000);
+  setInterval(loadFromServer, 10000);
 }
 
-function save() {} // GAS 연동으로 불필요 (호환성 유지)
-
+// ════════════════════════════════════════
+//  탑승 체크 탭
+// ════════════════════════════════════════
 function renderCheck() {
   const container = document.getElementById('busList');
   container.innerHTML = '';
-  people.forEach((p, i) => {
-    const boarded = !!busData[p.name];
+  people.filter(p => !exemptSet.has(p.name)).forEach((p, i) => {
+    const boarded    = !!busData[p.name];
     const isSelected = selectedName === p.name;
     const card = document.createElement('div');
     card.className = 'bus-card' + (boarded ? ' boarded' : isSelected ? ' selected' : '');
@@ -317,41 +355,34 @@ function renderCheck() {
 }
 
 function selectName(name) {
-  if (busData[name]) return; // 이미 탑승
+  if (busData[name]) return;
   selectedName = selectedName === name ? null : name;
   renderCheck();
 }
 
 function updateSubmitBar() {
   const label = document.getElementById('selectedLabel');
-  const btn = document.getElementById('submitBtn');
+  const btn   = document.getElementById('submitBtn');
   if (selectedName) {
-    label.innerHTML = `선택: <span>${selectedName}</span>`;
-    btn.disabled = false;
-    btn.classList.add('active');
+    label.innerHTML  = `선택: <span>${selectedName}</span>`;
+    btn.disabled     = false;
   } else {
-    label.innerHTML = '이름을 선택해주세요';
-    btn.disabled = true;
-    btn.classList.remove('active');
+    label.innerHTML  = '이름을 선택해주세요';
+    btn.disabled     = true;
   }
 }
 
 async function submitBoard() {
   if (!selectedName) return;
   const name = selectedName;
-  // UI 즉시 반영
   busData[name] = true;
-  selectedName = null;
+  selectedName  = null;
   renderCheck();
   document.getElementById('doneName').textContent = name + ' 님';
   document.getElementById('doneDialog').classList.add('show');
-  // 서버 저장
   try {
-    await fetch(GAS_URL, {
-      method: 'POST',
-      body: JSON.stringify({action: 'board', name})
-    });
-    loadFromServer(); // 서버 확인 후 갱신
+    await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'board', name}) });
+    loadFromServer();
   } catch(e) { alert('저장 실패. 네트워크를 확인해주세요.'); }
 }
 
@@ -359,113 +390,166 @@ function closeDone() {
   document.getElementById('doneDialog').classList.remove('show');
 }
 
+// ════════════════════════════════════════
+//  확인 탭
+// ════════════════════════════════════════
 function renderConfirm() {
-  const boarded = people.filter(p => busData[p.name]);
-  const notBoarded = people.filter(p => !busData[p.name]);
-  document.getElementById('boardedNum').textContent = boarded.length;
-  document.getElementById('notBoardedNum').textContent = notBoarded.length;
-  document.getElementById('boardCount').textContent = boarded.length;
+  const activeTotal = people.length - exemptSet.size;
+  const boarded     = people.filter(p => busData[p.name]  && !exemptSet.has(p.name));
+  const notBoarded  = people.filter(p => !busData[p.name] && !exemptSet.has(p.name));
 
-  // 탑승자
+  document.getElementById('totalNum').textContent     = activeTotal;
+  document.getElementById('boardedNum').textContent   = boarded.length;
+  document.getElementById('notBoardedNum').textContent= notBoarded.length;
+  document.getElementById('boardCount').textContent   = boarded.length;
+  document.getElementById('statsTotal').textContent   = ` / ${activeTotal}명`;
+
+  // 탑승자 목록
   document.getElementById('boardedTitle').textContent = `✅ 탑승자 (${boarded.length}명)`;
   const bl = document.getElementById('boardedList');
-  bl.innerHTML = '';
-  if (boarded.length === 0) {
-    bl.innerHTML = '<div class="empty-msg" style="padding:16px;font-size:13px;color:#aaa;">탑승자가 없습니다</div>';
-  } else {
-    boarded.forEach((p, i) => {
-      const card = document.createElement('div');
-      card.className = 'ok-card';
-      card.innerHTML = `
-        <div class="nb-num">${i+1}</div>
-        <div class="nb-info">
-          <div class="nb-name">🚌 ${p.name}</div>
-        </div>`;
-      bl.appendChild(card);
-    });
-  }
+  bl.innerHTML = boarded.length === 0
+    ? '<div class="empty-msg" style="padding:16px;font-size:13px;">탑승자가 없습니다</div>'
+    : boarded.map((p,i) => `
+        <div class="ok-card">
+          <div class="nb-num">${i+1}</div>
+          <div class="nb-info"><div class="nb-name">🚌 ${p.name}</div></div>
+        </div>`).join('');
 
-  // 미탑승자
+  // 미탑승자 목록
   document.getElementById('notBoardedTitle').textContent = `⚠️ 미탑승자 (${notBoarded.length}명)`;
-  const list = document.getElementById('notBoardedList');
-  list.innerHTML = '';
-  if (notBoarded.length === 0) {
-    list.innerHTML = '<div class="empty-msg">🎉 전원 탑승 완료!</div>';
+  const nl = document.getElementById('notBoardedList');
+  nl.innerHTML = notBoarded.length === 0
+    ? '<div class="empty-msg">🎉 전원 탑승 완료!</div>'
+    : notBoarded.map((p,i) => `
+        <div class="nb-card">
+          <div class="nb-num">${i+1}</div>
+          <div class="nb-info">
+            <div class="nb-name">${p.name}</div>
+            <div class="nb-phone">${p.phone}</div>
+          </div>
+          <a href="tel:${p.phone}" class="nb-call">📞</a>
+        </div>`).join('');
+}
+
+// ════════════════════════════════════════
+//  탭 전환
+// ════════════════════════════════════════
+function switchPage(page) {
+  if (page === 'confirm' && !confirmTabAuthed) {
+    showAuthDialog(true); // 확인 탭 진입 인증
     return;
   }
-  notBoarded.forEach((p, i) => {
-    const card = document.createElement('div');
-    card.className = 'nb-card';
-    card.innerHTML = `
-      <div class="nb-num">${i+1}</div>
-      <div class="nb-info">
-        <div class="nb-name">${p.name}</div>
-        <div class="nb-phone">${p.phone}</div>
-      </div>
-      <a href="tel:${p.phone}" class="nb-call">📞</a>`;
-    list.appendChild(card);
-  });
-}
-
-function switchPage(page) {
   currentPage = page;
-  document.querySelectorAll('.main-tab').forEach((t,i) => {
-    t.classList.toggle('active', (i===0&&page==='check')||(i===1&&page==='confirm'));
-  });
-  document.getElementById('page-check').classList.toggle('active', page==='check');
+  document.querySelectorAll('.main-tab').forEach((t,i) =>
+    t.classList.toggle('active', (i===0 && page==='check') || (i===1 && page==='confirm'))
+  );
+  document.getElementById('page-check').classList.toggle('active',   page==='check');
   document.getElementById('page-confirm').classList.toggle('active', page==='confirm');
-  if (page === 'confirm') renderConfirm();
+  if (page === 'confirm') { renderExemptTags(); renderConfirm(); }
 }
 
-// 스태프 인증 데이터
-const staffList = [
-  {name:"여상직", title:"집사", pin:"1771"},
-  {name:"전태룡", title:"집사", pin:"7463"},
-  {name:"이상진", title:"집사", pin:"1440"},
-  {name:"윤성원", title:"집사", pin:"8050"},
-  {name:"김찬영", title:"전도사", pin:"5654"}
-];
+// ════════════════════════════════════════
+//  자차이용 관리
+// ════════════════════════════════════════
+function searchExempt(val) {
+  const result = document.getElementById('searchResult');
+  const q = val.trim();
+  if (!q) { result.style.display = 'none'; return; }
+  const matches = people.filter(p =>
+    !exemptSet.has(p.name) &&
+    (p.name.includes(q) || p.phone.replace(/-/g,'').includes(q.replace(/-/g,'')))
+  );
+  if (!matches.length) { result.style.display = 'none'; return; }
+  result.innerHTML = matches.map(p => `
+    <div class="search-item" onclick="addExempt('${p.name}')">
+      <div class="search-item-name">${p.name}</div>
+      <div class="search-item-phone">${p.phone}</div>
+    </div>`).join('');
+  result.style.display = 'block';
+}
+
+function addExemptManual() {
+  const q = document.getElementById('exemptInput').value.trim();
+  if (!q) return;
+  const match = people.find(p =>
+    p.name === q || p.phone.replace(/-/g,'') === q.replace(/-/g,'')
+  );
+  match ? addExempt(match.name) : alert('일치하는 탑승자를 찾을 수 없습니다.');
+}
+
+function addExempt(name) {
+  exemptSet.add(name);
+  document.getElementById('exemptInput').value = '';
+  document.getElementById('searchResult').style.display = 'none';
+  renderExemptTags();
+  renderCheck();
+  renderConfirm();
+}
+
+function removeExempt(name) {
+  exemptSet.delete(name);
+  renderExemptTags();
+  renderCheck();
+  renderConfirm();
+}
+
+function renderExemptTags() {
+  const wrap = document.getElementById('exemptTags');
+  wrap.innerHTML = exemptSet.size === 0
+    ? '<span style="font-size:12px;color:#aaa;">등록된 자차이용자 없음</span>'
+    : [...exemptSet].map(name =>
+        `<span class="exempt-tag">${name}<button class="exempt-tag-del" onclick="removeExempt('${name}')">✕</button></span>`
+      ).join('');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap'))
+    document.getElementById('searchResult').style.display = 'none';
+});
+
+// ════════════════════════════════════════
+//  스태프 인증 다이얼로그
+// ════════════════════════════════════════
+let authMode = 'reset'; // 'reset' | 'enter'
 let authSelectedStaff = null;
 
-function showReset() {
+function showAuthDialog(isEnter) {
+  authMode = isEnter ? 'enter' : 'reset';
   authSelectedStaff = null;
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinError').textContent = '';
-  const btns = document.getElementById('staffButtons');
-  btns.innerHTML = '';
-  staffList.forEach(s => {
-    const btn = document.createElement('button');
-    btn.textContent = s.name + ' ' + s.title;
-    btn.style.cssText = 'padding:11px;border-radius:10px;border:2px solid #dde6f0;background:#f4f7fc;font-size:15px;font-weight:700;color:#1a2a3f;cursor:pointer;width:100%;';
-    btn.onclick = () => selectStaff(s);
-    btns.appendChild(btn);
-  });
-  goStep1();
-  document.getElementById('resetDialog').classList.add('show');
+  document.getElementById('authTitle').textContent = isEnter ? '🔐 확인 탭 인증' : '🔐 스태프 인증';
+  document.getElementById('authMsg').innerHTML     = isEnter
+    ? '스태프만 확인 탭에<br>접근할 수 있습니다'
+    : '초기화 권한이 있는 스태프만<br>가능합니다';
+  // 스태프 버튼 렌더링
+  document.getElementById('staffButtons').innerHTML = staffList.map((s,i) =>
+    `<button class="staff-btn" onclick="selectStaff(${i})">${s.name} ${s.title}</button>`
+  ).join('');
+  goAuthStep(1);
+  document.getElementById('authDialog').classList.add('show');
 }
 
-function hideReset() {
-  document.getElementById('resetDialog').classList.remove('show');
+function hideAuthDialog() {
+  document.getElementById('authDialog').classList.remove('show');
   authSelectedStaff = null;
 }
 
-function goStep1() {
-  document.getElementById('authStep1').style.display = '';
-  document.getElementById('authStep2').style.display = 'none';
-  document.getElementById('authStep3').style.display = 'none';
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinError').textContent = '';
-  authSelectedStaff = null;
+function goAuthStep(n) {
+  [1,2,3].forEach(i =>
+    document.getElementById('authStep'+i).style.display = (i===n ? '' : 'none')
+  );
+  if (n === 1) {
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').textContent = '';
+    authSelectedStaff = null;
+  }
 }
 
-function selectStaff(staff) {
-  authSelectedStaff = staff;
-  document.getElementById('selectedStaffName').textContent = '👤 ' + staff.name + ' ' + staff.title;
+function selectStaff(idx) {
+  authSelectedStaff = staffList[idx];
+  document.getElementById('selectedStaffName').textContent = `👤 ${authSelectedStaff.name} ${authSelectedStaff.title}`;
   document.getElementById('pinInput').value = '';
   document.getElementById('pinError').textContent = '';
-  document.getElementById('authStep1').style.display = 'none';
-  document.getElementById('authStep2').style.display = '';
-  document.getElementById('authStep3').style.display = 'none';
+  goAuthStep(2);
   setTimeout(() => document.getElementById('pinInput').focus(), 100);
 }
 
@@ -476,8 +560,13 @@ function verifyPin() {
     return;
   }
   if (authSelectedStaff && input === authSelectedStaff.pin) {
-    document.getElementById('authStep2').style.display = 'none';
-    document.getElementById('authStep3').style.display = '';
+    const isEnter = authMode === 'enter';
+    document.getElementById('authStep3Msg').innerHTML = isEnter
+      ? '확인 탭으로 이동합니다' : '모든 탑승 데이터를<br>초기화할까요?';
+    const okBtn = document.getElementById('authOkBtn');
+    okBtn.textContent        = isEnter ? '이동' : '초기화';
+    okBtn.style.background   = isEnter ? '#1a4a8c' : '#c0392b';
+    goAuthStep(3);
   } else {
     document.getElementById('pinError').textContent = '❌ 번호가 일치하지 않습니다';
     document.getElementById('pinInput').value = '';
@@ -485,35 +574,49 @@ function verifyPin() {
   }
 }
 
+function handleAuthOk() {
+  if (authMode === 'enter') {
+    confirmTabAuthed = true;
+    hideAuthDialog();
+    switchPage('confirm');
+  } else {
+    doReset();
+  }
+}
+
 async function doReset() {
   people.forEach(p => busData[p.name] = false);
   selectedName = null;
-  hideReset(); renderCheck();
+  hideAuthDialog();
+  renderCheck();
+  renderConfirm();
   try {
-    await fetch(GAS_URL, {
-      method: 'POST',
-      body: JSON.stringify({action: 'reset'})
-    });
+    await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'reset'}) });
     loadFromServer();
   } catch(e) { alert('초기화 실패. 네트워크를 확인해주세요.'); }
 }
 
+// ════════════════════════════════════════
+//  내보내기
+// ════════════════════════════════════════
 function showExport() {
-  const boarded = people.filter(p => busData[p.name]);
-  const not = people.filter(p => !busData[p.name]);
+  const boarded    = people.filter(p =>  busData[p.name] && !exemptSet.has(p.name));
+  const notBoarded = people.filter(p => !busData[p.name] && !exemptSet.has(p.name));
+  const exempt     = [...exemptSet];
   let text = `🚌 버스 탑승 명단\n${'='.repeat(28)}\n`;
-  text += `총 ${people.length}명 | 탑승 ${boarded.length}명 | 미탑승 ${not.length}명\n`;
-  text += `\n[탑승 완료 ${boarded.length}명]\n`;
-  boarded.forEach((p,i) => text += `${i+1}. ${p.name}  ${p.phone}\n`);
-  text += `\n[미탑승 ${not.length}명]\n`;
-  not.forEach((p,i) => text += `${i+1}. ${p.name}  ${p.phone}\n`);
+  text += `총 ${people.length - exempt.length}명 | 탑승 ${boarded.length}명 | 미탑승 ${notBoarded.length}명\n`;
+  if (boarded.length)    text += `\n[탑승 완료 ${boarded.length}명]\n`    + boarded.map((p,i)    => `${i+1}. ${p.name}  ${p.phone}`).join('\n') + '\n';
+  if (notBoarded.length) text += `\n[미탑승 ${notBoarded.length}명]\n`    + notBoarded.map((p,i) => `${i+1}. ${p.name}  ${p.phone}`).join('\n') + '\n';
+  if (exempt.length)     text += `\n[자차이용 ${exempt.length}명]\n`      + exempt.map((n,i)     => `${i+1}. ${n}`).join('\n') + '\n';
   document.getElementById('exportText').textContent = text;
   document.getElementById('modalBg').classList.add('show');
 }
+
 function hideExport(e) {
-  if (!e || e.target===document.getElementById('modalBg'))
+  if (!e || e.target === document.getElementById('modalBg'))
     document.getElementById('modalBg').classList.remove('show');
 }
+
 function copyText() {
   navigator.clipboard.writeText(document.getElementById('exportText').textContent).then(() => {
     const btn = document.querySelector('.copy-btn');
@@ -522,7 +625,9 @@ function copyText() {
   });
 }
 
-init(); renderCheck();
+// ── 시작 ──
+init();
+renderCheck();
 </script>
 </body>
 </html>
