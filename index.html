@@ -276,7 +276,7 @@ const people = [
   {name:"김진원", phone:"010-6299-5875"},
   {name:"이준택", phone:"010-7625-7273"},
   {name:"김도건", phone:"010-9132-7994"},
-  {name:"김혜세", phone:"010-9495-3194"},
+  {name:"김헤세", phone:"010-9495-3194"},
   {name:"안태성", phone:"010-2212-4826"},
   {name:"신준식", phone:"010-6640-9410"},
   {name:"오앵숙", phone:"010-2991-6174"},
@@ -324,6 +324,11 @@ async function loadFromServer() {
     const json = await res.json();
     if (json.ok) {
       people.forEach(p => busData[p.name] = !!json.data[p.name]);
+      // 자차이용자 서버에서 복원
+      if (json.exempt && json.exempt.length) {
+        exemptSet = new Set(json.exempt);
+        if (currentPage === 'confirm') renderExemptTags();
+      }
       currentPage === 'check' ? renderCheck() : renderConfirm();
     }
   } catch(e) { console.warn('서버 로드 실패', e); }
@@ -479,20 +484,26 @@ function addExemptManual() {
   match ? addExempt(match.name) : alert('일치하는 탑승자를 찾을 수 없습니다.');
 }
 
-function addExempt(name) {
+async function addExempt(name) {
   exemptSet.add(name);
   document.getElementById('exemptInput').value = '';
   document.getElementById('searchResult').style.display = 'none';
   renderExemptTags();
   renderCheck();
   renderConfirm();
+  try {
+    await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'exemptAdd', name}) });
+  } catch(e) { console.warn('자차 저장 실패', e); }
 }
 
-function removeExempt(name) {
+async function removeExempt(name) {
   exemptSet.delete(name);
   renderExemptTags();
   renderCheck();
   renderConfirm();
+  try {
+    await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'exemptRemove', name}) });
+  } catch(e) { console.warn('자차 삭제 실패', e); }
 }
 
 function renderExemptTags() {
@@ -615,11 +626,11 @@ async function doReset() {
   people.forEach(p => busData[p.name] = false);
   selectedName = null;
   hideAuthDialog();
+  switchPage('check'); // 탑승 체크 탭으로 이동
   renderCheck();
-  renderConfirm();
   try {
     await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action:'reset'}) });
-    loadFromServer();
+    await loadFromServer(); // 서버 데이터로 갱신
   } catch(e) { alert('초기화 실패. 네트워크를 확인해주세요.'); }
 }
 
