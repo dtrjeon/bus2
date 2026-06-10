@@ -117,9 +117,12 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
 </head>
 <body>
 
-<div class="header">
-  <h1>🚌 셔틀버스 탑승 확인</h1>
-  <div class="header-sub">지구촌교회 · 33명</div>
+<div class="header" style="display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <h1>🚌 셔틀버스 탑승 확인</h1>
+    <div class="header-sub">지구촌교회 · 33명</div>
+  </div>
+  <button id="logoutBtn" onclick="doLogout()" style="display:none;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;">🔓 로그아웃</button>
 </div>
 
 <div class="main-tabs">
@@ -146,7 +149,7 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
 <div class="page" id="page-confirm">
   <div class="confirm-page">
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-      <button class="admin-btn reset" style="flex:none;padding:8px 18px;" onclick="showAuthDialog(false)">🔄 전체 초기화</button>
+      <button class="admin-btn reset" style="flex:none;padding:8px 18px;" onclick="tryReset()">🔄 전체 초기화</button>
     </div>
     <div class="summary-box">
       <div class="summary-title">🚌 탑승 현황 요약</div>
@@ -311,7 +314,6 @@ let busData = {};
 let selectedName = null;
 let currentPage = 'check';
 let exemptSet = new Set();
-let confirmTabAuthed = false;
 
 // ════════════════════════════════════════
 //  서버 연동
@@ -435,7 +437,7 @@ function renderConfirm() {
 //  탭 전환
 // ════════════════════════════════════════
 function switchPage(page) {
-  if (page === 'confirm' && !confirmTabAuthed) {
+  if (page === 'confirm' && !staffAuthed) {
     showAuthDialog(true); // 확인 탭 진입 인증
     return;
   }
@@ -512,6 +514,7 @@ document.addEventListener('click', e => {
 // ════════════════════════════════════════
 let authMode = 'reset'; // 'reset' | 'enter'
 let authSelectedStaff = null;
+let staffAuthed = false; // 한번 인증 후 로그아웃 전까지 유지
 
 function showAuthDialog(isEnter) {
   authMode = isEnter ? 'enter' : 'reset';
@@ -576,7 +579,8 @@ function verifyPin() {
 
 function handleAuthOk() {
   if (authMode === 'enter') {
-    confirmTabAuthed = true;
+    staffAuthed = true;
+    document.getElementById('logoutBtn').style.display = 'block';
     hideAuthDialog();
     switchPage('confirm');
   } else {
@@ -584,7 +588,30 @@ function handleAuthOk() {
   }
 }
 
+// 초기화 시도 - 인증됐으면 바로 Step3, 아니면 인증부터
+function tryReset() {
+  if (staffAuthed) {
+    // 이미 인증 상태 - 바로 확인창 표시
+    showResetConfirm();
+  } else {
+    showAuthDialog(false);
+  }
+}
+
+function showResetConfirm() {
+  document.getElementById('authTitle').textContent = '🔄 전체 초기화';
+  document.getElementById('authMsg').innerHTML = '';
+  document.getElementById('authStep3Msg').innerHTML = '탑승 데이터를 초기화할까요?<br><span style="font-size:11px;color:#aaa;">(자차이용자는 유지됩니다)</span>';
+  const okBtn = document.getElementById('authOkBtn');
+  okBtn.textContent      = '초기화';
+  okBtn.style.background = '#c0392b';
+  authMode = 'reset';
+  [1,2,3].forEach(i => document.getElementById('authStep'+i).style.display = (i===3?'':'none'));
+  document.getElementById('authDialog').classList.add('show');
+}
+
 async function doReset() {
+  // 탑승 데이터만 초기화 (자차이용자 exemptSet 유지)
   people.forEach(p => busData[p.name] = false);
   selectedName = null;
   hideAuthDialog();
@@ -623,6 +650,12 @@ function copyText() {
     btn.textContent = '✅ 복사됨!';
     setTimeout(() => btn.textContent = '클립보드에 복사', 1500);
   });
+}
+
+function doLogout() {
+  staffAuthed = false;
+  document.getElementById('logoutBtn').style.display = 'none';
+  switchPage('check'); // 체크 탭으로 이동
 }
 
 // ── 시작 ──
