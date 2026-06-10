@@ -120,8 +120,8 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
 <div class="header" style="display:flex;align-items:center;justify-content:space-between;">
   <div>
     <h1>🚌 셔틀버스 탑승 확인</h1>
-    <div class="header-sub">
-      총 교육생 33명 중 셔틀버스 탑승인원 <span id="headerBusCount">0</span>명 &nbsp;|&nbsp; 자차이용 <span id="headerExemptCount">0</span>명
+    <div class="header-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;">
+      총 교육생 33명 | 셔틀 <span id="headerBusCount">0</span>명 | 자차 <span id="headerExemptCount">0</span>명
     </div>
   </div>
   <button id="logoutBtn" onclick="doLogout()" style="display:none;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;">🔓 로그아웃</button>
