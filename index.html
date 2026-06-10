@@ -120,7 +120,9 @@ body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#
 <div class="header" style="display:flex;align-items:center;justify-content:space-between;">
   <div>
     <h1>🚌 셔틀버스 탑승 확인</h1>
-    <div class="header-sub">지구촌교회 · 33명</div>
+    <div class="header-sub">
+      총 교육생 33명 중 셔틀버스 탑승인원 <span id="headerBusCount">0</span>명 &nbsp;|&nbsp; 자차이용 <span id="headerExemptCount">0</span>명
+    </div>
   </div>
   <button id="logoutBtn" onclick="doLogout()" style="display:none;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;">🔓 로그아웃</button>
 </div>
@@ -343,9 +345,18 @@ function init() {
 // ════════════════════════════════════════
 //  탑승 체크 탭
 // ════════════════════════════════════════
+function updateHeaderStats() {
+  const busCount    = people.filter(p => busData[p.name] && !exemptSet.has(p.name)).length;
+  const exemptCount = exemptSet.size;
+  const busTotal    = people.length - exemptCount; // 셔틀 대상 인원
+  document.getElementById('headerBusCount').textContent  = busCount + '/' + busTotal;
+  document.getElementById('headerExemptCount').textContent = exemptCount;
+}
+
 function renderCheck() {
   const container = document.getElementById('busList');
   container.innerHTML = '';
+  updateHeaderStats();
   people.filter(p => !exemptSet.has(p.name)).forEach((p, i) => {
     const boarded    = !!busData[p.name];
     const isSelected = selectedName === p.name;
@@ -401,6 +412,7 @@ function closeDone() {
 //  확인 탭
 // ════════════════════════════════════════
 function renderConfirm() {
+  updateHeaderStats();
   const activeTotal = people.length - exemptSet.size;
   const boarded     = people.filter(p => busData[p.name]  && !exemptSet.has(p.name));
   const notBoarded  = people.filter(p => !busData[p.name] && !exemptSet.has(p.name));
